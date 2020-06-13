@@ -1,13 +1,22 @@
 #include "robot.hpp"
 
+// structure of booleans showing what paths can be taken
+struct Path {
+	bool left = false;
+	bool straight = false;
+	bool right = false;
+	bool ifPath = false;
+};
+
 int main(){
 	if (initClientRobot() !=0){
 		std::cout<<" Error initializing robot"<<std::endl;
 	}
-    double vLeft = 15.0;
-    double vRight = 15.0;
-    int numWhitepix = 0;
-    int iswhite;
+	double vBase = 15.0; //defining base speed
+    double vLeft = vBase;
+    double vRight = vBase;
+    
+    
 
     while(1){
 		takePicture();
@@ -17,62 +26,68 @@ int main(){
 		int lLeft = cameraView.width;
 		int lRight = 0;
 		
-		int row = cameraView.height/2;
-		for ( int column = 0; column < cameraView.width ; column++) {
-			int curPix = get_pixel(cameraView, row, column, 3);	//getting current pixel
-			//Checking to see if pixel is white
-			if(curPix >= 170) {
-				iswhite = 1;
-			//	numWhitepix++;
-				//std::cout<<numWhitepix<<std::endl;
-				
-				//setting dimensions of line
-				if (column < lLeft) {
-					lLeft = column;
-				}
-				else if(column > lRight) {
-					lRight = column;
-				}
-			}
-			else {
-				iswhite = 0;
-				}
-				std::cout<<"iswhite = "<<iswhite<<std::endl;
-				
-				if(iswhite==1){
-					numWhitepix++;
-					std::cout<<numWhitepix<<std::endl;
+		Path path; //creating instance of Path structure
+		
+		for (int row = 0; row < cameraView.height; row++) {
+			for ( int column = 0; column < cameraView.width ; column++) {
+				int curPix = get_pixel(cameraView, row, column, 3);	//getting current pixel
+				//Checking to see if pixel is white
+				if(curPix > 250) {
+					path.ifPath = true; // checking if path exists
+					
+					//checking what directions path goes in
+					if(row == 0) {
+						path.straight = true;
+					}
+					if(column == 0 && row > 5) {
+						path.left = true;
+					}
+					if(column == cameraView.width-1 && row > 5) {
+						path.right = true;
 					}
 					
-		}
-		//calculate line centre
-		int centre = (int)((lLeft + lRight)/2);
-		
-		//check if line if is in centre of view and change direction accordingly
-		if (centre < (cameraView.width/2)) {
-			vRight = 25.0;
-			vLeft = 15.0;
-		}
-		else if (centre > (cameraView.width/2)) {
-			vRight = 15.0;
-			vLeft = 25.0;
-		}
-		else if(centre == (cameraView.width/2)) {
-			vRight = 15.0;
-			vLeft = 15.0;
+					if (row == cameraView.height/2) {
+					//setting dimensions of line
+						if (column < lLeft) {
+							lLeft = column;
+						}
+						else if(column > lRight) {
+							lRight = column;
+						}
+					}
+				}
+			}
 		}
 		
-		//if (numWhitepix>7){
-		//	vRight = 25.0;
-		//	vLeft = 5.0;
-		//	}
+		//Caculating change in error based on paths prioritizing the right most
+		double direction;
+		if(path.right){
+			direction = -100; 
+		}
+		else if(path.straight) {
+			direction = 0;
+		}
+		else if(path.left) {
+			direction = 100;
+		}
+		else if(!path.ifPath) {
+			direction = -15/0.05;
+			std::cout<<"hello"<<std::endl;
+		}
 		
+		int centre = (int)((lLeft + lRight)/2); //calculate line centre
+		double error = centre - cameraView.width/2 - direction; // calculating error
+		double dv = 0.05*error;
+		
+		// setting moter speeds
+		vLeft = vBase + dv;
+		vRight = vBase - dv;
 		
 		setMotors(vLeft,vRight);
+		
 		std::cout<<" vLeft="<<vLeft<<"  vRight="<<vRight<<std::endl;
 		
 		usleep(10000);
-	} //while(1)
+	} //while
 
 } // main
-
