@@ -39,10 +39,10 @@ int main(){
 					if(row == 0) {
 						path.straight = true;
 					}
-					if(column == 0 && row > 5) {
+					if(column == 0 && row > cameraView.width/3) {
 						path.left = true;
 					}
-					if(column == cameraView.width-1 && row > 5) {
+					if(column == cameraView.width-1 && row > cameraView.width/3) {
 						path.right = true;
 					}
 					
