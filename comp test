@@ -72,7 +72,6 @@ int main(){
 		}
 		else if(!path.ifPath) {
 			direction = -15/0.05;
-			std::cout<<"hello"<<std::endl;
 		}
 		
 		int centre = (int)((lLeft + lRight)/2); //calculate line centre
